@@ -33,7 +33,7 @@ const Home = () => {
   }
   let interval = setInterval(() => {
     refreshToken().then(data => setUser(data))
-  },1000 * 28)
+  },1000 * 29)
 
   return () => clearInterval(interval);
 }, [])
