@@ -54,6 +54,11 @@ const login = async (req, res, next) => {
     const token = jwt.sign({id: existingUser._id}, JWT_KEY, {
         expiresIn: "35s"
     });
+    console.log("Generated Token\n", token);
+    
+    if(req.cookies[`$(existingUser._id)`]) {
+        req.cookies[`${existingUser._id}`] = ""
+    }
 
     res.cookie(String(existingUser._id), token, {
         path: '/',
@@ -119,6 +124,8 @@ jwt.verify(String(prevToken), JWT_KEY, (err,user) => {
     const token =jwt.sign({id: user.id}, JWT_KEY, {
         expiresIn: "35s"
     })
+
+    console.log("Regenerated Token\n", token);
 
     res.cookie(String(user.id), token, {
         path: '/',
