@@ -22,7 +22,7 @@ function handelChange(e) {
 }
 
 const sendRequest = async () => {
-  const res = await axios.post(`http://localhost:5000/api/signup`,
+  const res = await axios.post(`http://localhost:8080/users/signup`,
   {
     name: inputs.name,
     email: inputs.email,

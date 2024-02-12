@@ -33,20 +33,9 @@ const login = async (req, res) => {
         }
         else{
             const token = jwt.sign({id: response._id}, key, {
-                expiresIn: "35s"
+                expiresIn: "1hr"
             });
             console.log("Generated Token\n", token);
-            
-            if(req.cookies[`$(response._id)`]) {
-                req.cookies[`${response._id}`] = ""
-            }
-        
-            res.cookie(String(response._id), token, {
-                path: '/',
-                expires: new Date(Date.now() + 1000 * 30),
-                httpOnly: true,
-                sameSite: 'lax'
-            });
             return res.status(200).json({message: "Successfully Logged In", user: response, token})
         }
     }
@@ -59,10 +48,10 @@ const login = async (req, res) => {
 
 const verifyToken = (req, res, next) => {
 
-    const cookies = req.headers.cookie;
-    const token = cookies.split("=")[1];
-
-    console.log(token)
+    const headers = req.headers[`authorization`]
+    const token = headers.split(" ")[1]
+    
+    // console.log(headers)
 
     if(!token) {
         res.status(404).json({message: "No token Found"})
@@ -92,41 +81,41 @@ const getUser = async (req,res,next) => {
     return res.status(200).json({user})
 }
 
-const refreshToken = (req, res, next) => {
-    const cookies = req.headers.cookie;
-    const prevToken = cookies.split('=')[1];
+// const refreshToken = (req, res, next) => {
+//     const cookies = req.headers.cookie;
+//     const prevToken = cookies.split('=')[1];
 
-if(!prevToken) {
-    return res.status(400).json({message: "Couldn't find token"})
-}
-jwt.verify(String(prevToken), key, (err,user) => {
-    if(err){
-        console.log(err);
-        return res.status(403).json({message: 'Authentication failed'});
-    }
-    res.clearCookie(`${user.id}`);
-    req.cookies[`${user.id}`] = "";
+// if(!prevToken) {
+//     return res.status(400).json({message: "Couldn't find token"})
+// }
+// jwt.verify(String(prevToken), key, (err,user) => {
+//     if(err){
+//         console.log(err);
+//         return res.status(403).json({message: 'Authentication failed'});
+//     }
+//     res.clearCookie(`${user.id}`);
+//     req.cookies[`${user.id}`] = "";
 
-    const token =jwt.sign({id: user.id}, key, {
-        expiresIn: "35s"
-    })
+//     const token =jwt.sign({id: user.id}, key, {
+//         expiresIn: "35s"
+//     })
 
-    console.log("Regenerated Token\n", token);
+//     console.log("Regenerated Token\n", token);
 
-    res.cookie(String(user.id), token, {
-        path: '/',
-        expires: new Date(Date.now() + 1000 * 30),
-        httpOnly: true,
-        sameSite: 'lax'
-    });
+//     res.cookie(String(user.id), token, {
+//         path: '/',
+//         expires: new Date(Date.now() + 1000 * 30),
+//         httpOnly: true,
+//         sameSite: 'lax'
+//     });
 
-    req.id = user.id;
-    next();
-});
-}
+//     req.id = user.id;
+//     next();
+// });
+// }
 
 exports.signup = signup;
 exports.login = login;
 exports.verifyToken = verifyToken
 exports.getUser = getUser;
-exports.refreshToken = refreshToken
+// exports.refreshToken = refreshToken
