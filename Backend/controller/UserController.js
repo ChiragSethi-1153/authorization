@@ -22,7 +22,7 @@ const signup = async (req, res) => {
 const login = async (req, res) => {
 
     try{
-        const response = await userServices.login(req)
+        const response = await userServices.login(req, res)
         if(response == 'User not found. Signup Please!'){
             return res.status(400).json({response})
         }

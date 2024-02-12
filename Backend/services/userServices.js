@@ -35,7 +35,7 @@ console.log(req.body)
 
 }
 
-exports.login = async (req) => {
+exports.login = async (req, res) => {
     const {email, password} = req.body
 
     let existingUser;
