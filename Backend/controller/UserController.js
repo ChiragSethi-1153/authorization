@@ -1,5 +1,7 @@
 const User = require('../model/User')
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
+const key = process.env.JWT_KEY
 
 const {userServices} = require('../services')
 
@@ -30,31 +32,28 @@ const login = async (req, res) => {
             return res.status(400).json({response})
         }
         else{
-
-            return res.status(200).json({message: "Successfully Logged In", user: existingUser, token})
+            const token = jwt.sign({id: response._id}, key, {
+                expiresIn: "35s"
+            });
+            console.log("Generated Token\n", token);
+            
+            if(req.cookies[`$(response._id)`]) {
+                req.cookies[`${response._id}`] = ""
+            }
+        
+            res.cookie(String(response._id), token, {
+                path: '/',
+                expires: new Date(Date.now() + 1000 * 30),
+                httpOnly: true,
+                sameSite: 'lax'
+            });
+            return res.status(200).json({message: "Successfully Logged In", user: response, token})
         }
     }
     catch(err){
         console.log(err)
     }
 
-    const token = jwt.sign({id: existingUser._id}, JWT_KEY, {
-        expiresIn: "35s"
-    });
-    console.log("Generated Token\n", token);
-    
-    if(req.cookies[`$(existingUser._id)`]) {
-        req.cookies[`${existingUser._id}`] = ""
-    }
-
-    res.cookie(String(existingUser._id), token, {
-        path: '/',
-        expires: new Date(Date.now() + 1000 * 30),
-        httpOnly: true,
-        sameSite: 'lax'
-    });
-
-    
 }
 
 
@@ -68,7 +67,7 @@ const verifyToken = (req, res, next) => {
     if(!token) {
         res.status(404).json({message: "No token Found"})
     }
-    jwt.verify(String(token),JWT_KEY, (err, user) => {
+    jwt.verify(String(token),key, (err, user) => {
         if(err) {
           return  res.status(400).json({message: "Invalid Token"})
         }
@@ -100,7 +99,7 @@ const refreshToken = (req, res, next) => {
 if(!prevToken) {
     return res.status(400).json({message: "Couldn't find token"})
 }
-jwt.verify(String(prevToken), JWT_KEY, (err,user) => {
+jwt.verify(String(prevToken), key, (err,user) => {
     if(err){
         console.log(err);
         return res.status(403).json({message: 'Authentication failed'});
@@ -108,7 +107,7 @@ jwt.verify(String(prevToken), JWT_KEY, (err,user) => {
     res.clearCookie(`${user.id}`);
     req.cookies[`${user.id}`] = "";
 
-    const token =jwt.sign({id: user.id}, JWT_KEY, {
+    const token =jwt.sign({id: user.id}, key, {
         expiresIn: "35s"
     })
 
