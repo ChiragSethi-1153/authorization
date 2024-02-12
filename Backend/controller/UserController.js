@@ -1,54 +1,41 @@
 const User = require('../model/User')
-const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-const JWT_KEY = "key"
 
-const signup = async (req, res, next) => {
-    console.log(req.body)
-    const {name, email, password} = req.body;
-    let existingUser;
-    try{
-        existingUser = await User.findOne({email: email});
-    } catch (err) {
-        console.log(err)
-    }   
-    if(existingUser){
-        return res.status(400).json({message: "User already exists! Login instead"});
-    }
+const {userServices} = require('../services')
 
-    const hashedPassword = bcrypt.hashSync(password)
-
-    const user = new User({
-        name,
-        email,
-       password: hashedPassword
-    });
+const signup = async (req, res) => {
 
     try{
-        await user.save();
+        const response = await userServices.signup(req);
+        if(response == 'User already exists! Login instead'){
+            return res.status(400).json({response})
+        }
+        else{
+            return res.status(201).json({message: response})
+        }
     }
     catch(err) {
         console.log(err)
     }
-
-    return res.status(201).json({message:user})
 }
 
-const login = async (req, res, next) => {
-    const {email, password} = req.body
+const login = async (req, res) => {
 
-    let existingUser;
     try{
-        existingUser  = await User.findOne({email:email})
-    } catch(err){
-        return new Error(err);
+        const response = await userServices.login(req)
+        if(response == 'User not found. Signup Please!'){
+            return res.status(400).json({response})
+        }
+        else if(response == "Invalid Email / Password"){
+            return res.status(400).json({response})
+        }
+        else{
+
+            return res.status(200).json({message: "Successfully Logged In", user: existingUser, token})
+        }
     }
-    if(!existingUser) {
-        return res.status(400).json({message: "User not found. Signup Please!"})
-    }
-    const isPasswordCorrect = bcrypt.compareSync(password, existingUser.password);
-    if(!isPasswordCorrect) {
-        return res.status(400).json({message: "Invalid Email / Password"})
+    catch(err){
+        console.log(err)
     }
 
     const token = jwt.sign({id: existingUser._id}, JWT_KEY, {
@@ -67,7 +54,7 @@ const login = async (req, res, next) => {
         sameSite: 'lax'
     });
 
-    return res.status(200).json({message: "Successfully Logged In", user: existingUser, token})
+    
 }
 
 
@@ -83,7 +70,7 @@ const verifyToken = (req, res, next) => {
     }
     jwt.verify(String(token),JWT_KEY, (err, user) => {
         if(err) {
-          return  res.status(400).json({meassage: "Invalid Token"})
+          return  res.status(400).json({message: "Invalid Token"})
         }
         console.log(user.id);
         req.id = user.id

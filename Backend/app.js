@@ -1,6 +1,8 @@
+require("dotenv").config();
+
 const express = require('express')
-const mongoose = require('mongoose')
-const router = require('./Routes/userRoutes');
+require('./config/db');
+const router = require('./routes');
 const cookieParser = require('cookie-parser')
 
 const cors = require('cors');
@@ -10,16 +12,13 @@ app.use(cookieParser())
 app.use(cors({credentials: true, origin: "http://localhost:3000"}))
 app.use(express.json({extended: true}))
 app.use(express.urlencoded({extended:true}))
-app.use('/api', router)
+app.use('/', router)
 app.use(express.json())
 
 
-mongoose.connect('mongodb+srv://chirag1153:r2qDFoTSexIs6JNX@cluster0.slkp5ui.mongodb.net/').then(() => {
-    app.listen(5000);
-    console.log('db is connected')
-}).catch((err) => console.log(err))
-
-
+app.listen(process.env.PORT, function(){
+    console.log(`Server listening on port ${process.env.PORT}`)
+})
 
 
 
